@@ -435,13 +435,16 @@ class Peripheral(BluepyHelper):
 
     def getServiceByUUID(self, uuidVal):
         uuid = UUID(uuidVal)
-        if uuid in self._serviceMap:
+        if self._serviceMap is not None and uuid in self._serviceMap:
             return self._serviceMap[uuid]
         self._writeCmd("svcs %s\n" % uuid)
         rsp = self._getResp('find')
         if 'hstart' not in rsp:
             raise BTLEException(BTLEException.GATT_ERROR, "Service %s not found" % (uuid.getCommonName()))
         svc = Service(self, uuid, rsp['hstart'][0], rsp['hend'][0])
+        if self._serviceMap is None:
+            self._serviceMap = {}
+
         self._serviceMap[uuid] = svc
         return svc
 
@@ -477,6 +480,8 @@ class Peripheral(BluepyHelper):
             resp = self._getResp('desc')
             nDesc = len(resp['hnd'])
             descriptors += [Descriptor(self, resp['uuid'][i], resp['hnd'][i]) for i in range(nDesc)]
+            if endHnd == 0xFFFF:
+                break  # most devices will never return these many descriptors, the logic above seems wrong
         return descriptors
 
     def readCharacteristic(self, handle):
