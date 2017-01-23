@@ -11,7 +11,7 @@ _ENABLE_NOTIFICATIONS_DESC_UUID = UUID('00002902-0000-1000-8000-00805f9b34fb')
 class UARTServer(Peripheral):
     def __init__(self, addr, is_random=False):
         addrType = 'random' if is_random else 'public'
-        super(UARTServer, self).__init__(addr, addrType=addrType)
+        Peripheral.__init__(self, addr, addrType=addrType)
 
         self._uart_delegate = UARTServerDelegate()
         self.setDelegate(self._uart_delegate)
@@ -31,7 +31,7 @@ class UARTServer(Peripheral):
             raise RuntimeError('Failed to find descriptor for enabling notifications')
 
         notify_descriptor = notify_descriptors[0]  # type: Descriptor
-        notify_descriptor.write(bytes([0x01, 0x00]))
+        notify_descriptor.write(bytearray([0x01, 0x00]))
         return notify_descriptor
 
     def write_string(self, s):
@@ -53,11 +53,11 @@ class UARTServer(Peripheral):
 
 class UARTServerDelegate(DefaultDelegate):
     def __init__(self):
-        super(UARTServerDelegate, self).__init__()
+        DefaultDelegate.__init__(self)
         self._incoming_notifications = {}
 
     def handleNotification(self, hnd, data):
-        super(UARTServerDelegate, self).handleNotification(hnd, data)
+        DefaultDelegate.handleNotification(self, hnd, data)
         DBG('in handle notification: %s %s' % (hnd, data))
         if hnd not in self._incoming_notifications:
             self._incoming_notifications[hnd] = []
